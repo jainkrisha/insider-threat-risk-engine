@@ -21,8 +21,8 @@ FinSpark is an AI-driven behavioral analysis engine designed to detect misuse of
 
 ### 1. Clone the repository
 ```bash
-git clone <your-repo-url>
-cd Finspark
+git clone https://github.com/jainkrisha/insider-threat-risk-engine.git
+cd insider-threat-risk-engine
 ```
 
 ### 2. Install Dependencies
@@ -33,16 +33,16 @@ pip install -r requirements.txt
 
 ### 3. Download the Dataset
 Because the raw CERT r4.2 dataset and generated feature tables are very large (15GB+), they are not hosted on GitHub.
-1. Download the data from our [Google Drive Link](#) *(Replace with actual link)*.
+1. Download the data from our [Google Drive Link](https://drive.google.com/drive/folders/1bOf72HOXVrsE6FwEVgyYv4tnBdLnCXTn?usp=sharing).
 2. Extract the files and place them in the root directory so your folder structure looks like this:
    ```text
    Finspark/
-   ├── data/                 # Raw CERT data (http.csv, email.csv, etc.)
-   ├── features.csv          # 34MB generated feature table
-   ├── features_baseline.csv # 64MB historical baselines
-   ├── src/                  # Source code
-   ├── models/               # Pre-trained model bundle
-   └── api.py                # FastAPI app
+      ├── data/                 # Raw CERT data (http.csv, email.csv, etc.)
+      ├── features.csv          # 34MB generated feature table
+      ├── features_baseline.csv # 64MB historical baselines
+      ├── src/                  # Source code
+      ├── models/               # Pre-trained model bundle
+      └── api.py                # FastAPI app
    ```
 
 ---
