@@ -1,0 +1,36 @@
+{
+  "version": "v1",
+  "train_cutoff_date": "2010-09-24",
+  "feature_cols": [
+    "logon_count_personal_zscore",
+    "off_hours_events_personal_zscore",
+    "unique_pcs_personal_zscore",
+    "device_connects_personal_zscore",
+    "device_off_hours_personal_zscore",
+    "file_events_personal_zscore",
+    "removable_file_events_personal_zscore",
+    "email_count_personal_zscore",
+    "external_email_count_personal_zscore",
+    "off_hours_events",
+    "device_off_hours",
+    "removable_file_events",
+    "unique_pcs",
+    "external_email_count",
+    "suspicious_url_events"
+  ],
+  "tier_cutoffs": {
+    "Low": 6.993066858521772,
+    "Medium": 24.202876142436196,
+    "High": 45.657865517581,
+    "Critical": 65.5420149550086
+  },
+  "ensemble_weights": {
+    "isolation_forest": 0.6,
+    "random_forest": 0.4
+  },
+  "aggregation_weights": {
+    "max": 0.5,
+    "mean": 0.3,
+    "high_risk_days": 0.2
+  }
+}

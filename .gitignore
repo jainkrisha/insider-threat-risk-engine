@@ -1,0 +1,40 @@
+# Files and directories to NEVER commit
+# -------------------------------------------------------
+
+# Raw CERT r4.2 data (too large for GitHub, hosted on Google Drive)
+data/
+
+# Generated feature tables (large, reproducible from raw data)
+features.csv
+features_baseline.csv
+
+# Generated output files
+risk_scores.csv
+risk_scores_test.csv
+scored_output.csv
+features_with_http.csv
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Old unused scripts
+archive/
