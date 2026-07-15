@@ -1,5 +1,5 @@
 FINSPARK PROJECT SUMMARY
-========================
+=======================
 
 This file serves as a final summary of the features completed for the Privileged Access Misuse & Insider Threat Detection engine.
 
