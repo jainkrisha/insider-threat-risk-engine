@@ -5,7 +5,7 @@ FinSpark is an AI-driven behavioral analysis engine designed to detect misuse of
 ## 🌟 Key Features
 
 - **Hybrid AI Risk Engine**: Uses a robust ensemble of Unsupervised Learning (Isolation Forest) and Supervised Learning (Random Forest) to catch both sudden anomalies and slow-burn data exfiltration.
-- **Explainable AI (XAI)**: Generates human-readable narrative explanations for why a user was flagged, breaking down exact feature deviations (z-scores) from their normal historical baseline.
+- **Explainable AI (XAI)**: Generates human-readable narrative explanations for why a user was flagged, breaking down exact feature deviations (z-scores) from their normal historical baseline. The engine precisely differentiates between sudden, anomalous spikes in activity and sharp, suspicious drops.
 - **Real-Time Detection API**: A lightning-fast FastAPI backend that scores user activity on the fly.
 - **Risk-Based Access Control**: Automatically recommends security actions (e.g., `require_mfa`, `restrict_removable_media`) based on the dynamically calculated risk tier (Low, Medium, High, Critical).
 - **Interactive Web Dashboard**: A built-in modern UI to analyze users and visualize threat intelligence instantly.
