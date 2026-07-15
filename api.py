@@ -18,6 +18,7 @@ from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Extra
 from typing import Optional, List, Dict, Any
 
+sys.path.insert(0, "src")
 from src.predict import RiskPredictor
 from src.config import VAULT_AUDIT_RISK_TIERS
 from src.vault import HybridVault, VaultDecryptionError, VaultRecordNotFoundError

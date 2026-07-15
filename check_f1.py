@@ -5,7 +5,9 @@ Run from project root: python check_f1.py
 import sys, json
 import pandas as pd
 import numpy as np
+import sys
 
+sys.path.insert(0, "src")
 from src.config import score_to_tier
 
 scores = pd.read_csv("risk_scores_test.csv")

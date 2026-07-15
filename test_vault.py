@@ -13,6 +13,7 @@ import sys
 import tempfile
 import shutil
 
+sys.path.insert(0, "src")
 from src.vault import (
     HybridVault,
     VaultDecryptionError,
