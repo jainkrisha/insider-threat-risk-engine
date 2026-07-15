@@ -6,8 +6,7 @@ import sys, json
 import pandas as pd
 import numpy as np
 
-sys.path.insert(0, "src")
-from config import score_to_tier
+from src.config import score_to_tier
 
 scores = pd.read_csv("risk_scores_test.csv")
 

@@ -38,3 +38,8 @@ Thumbs.db
 
 # Old unused scripts
 archive/
+
+# Quantum-safe audit vault (generated at runtime, contain sensitive keys/data)
+vault_keys/
+vault_store.jsonl
+vault_index.json

@@ -11,14 +11,16 @@ Test it:
          -d '{"user":"CCA0046", "logon_count":5, "off_hours_events":10}'
 """
 
+import datetime
 import sys
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Extra
 from typing import Optional, List, Dict, Any
 
-sys.path.insert(0, "src")
-from predict import RiskPredictor
+from src.predict import RiskPredictor
+from src.config import VAULT_AUDIT_RISK_TIERS
+from src.vault import HybridVault, VaultDecryptionError, VaultRecordNotFoundError
 
 app = FastAPI(
     title="FinSpark Risk Engine API",
@@ -32,6 +34,10 @@ try:
 except Exception as e:
     print(f"Warning: Could not load model bundle. Is models/model_v1.pkl present? Error: {e}")
     predictor = None
+
+# Instantiate the quantum-safe audit vault once at startup.
+# Long-term keypairs are generated on first run and reloaded on subsequent runs.
+vault = HybridVault(key_dir="vault_keys")
 
 
 # Define the expected JSON payload for a scoring request.
@@ -136,9 +142,18 @@ def get_ui():
                             <p id="res-narrative" class="text-sm text-slate-300 leading-relaxed"></p>
                         </div>
 
-                        <div class="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
+                        <div class="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50 mb-4">
                             <h4 class="text-sm font-semibold text-slate-300 mb-2">Recommended Actions</h4>
                             <ul id="res-actions" class="text-sm text-slate-300 list-disc list-inside"></ul>
+                        </div>
+
+                        <div id="audit-badge" class="hidden bg-indigo-900/40 border border-indigo-500/40 p-3 rounded-lg text-xs text-indigo-300 flex items-start gap-2">
+                            <span class="text-base leading-none mt-0.5">&#128274;</span>
+                            <span>
+                                <strong class="text-indigo-200">Audit entry encrypted</strong>
+                                (hybrid: X25519 + ML-KEM-768)<br>
+                                Record ID: <code id="audit-record-id" class="font-mono text-indigo-100 text-xs"></code>
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -200,6 +215,15 @@ def get_ui():
                 } else {
                     actionsUl.innerHTML = '<li class="text-slate-500">No strict actions required</li>';
                 }
+
+                // Show audit badge for High/Critical results
+                const auditBadge = document.getElementById('audit-badge');
+                if (data.audit_record_id) {
+                    document.getElementById('audit-record-id').innerText = data.audit_record_id;
+                    auditBadge.classList.remove('hidden');
+                } else {
+                    auditBadge.classList.add('hidden');
+                }
             }
         </script>
     </body>
@@ -249,7 +273,43 @@ def score_user_activity(request: ScoreRequest):
                 f"Their activity aligns with their normal historical baseline."
             )
 
+        # Encrypt and store an audit record for High/Critical risk events.
+        # The returned record_id is added to the response for demo verification.
+        if tier in VAULT_AUDIT_RISK_TIERS:
+            audit_entry = {
+                "user_id": result["user"],
+                "risk_tier": tier,
+                "action_taken": result["recommended_actions"],
+                "explanation": result["narrative_explanation"],
+                "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                "session_id": row_dict.get("day") or "live-request",
+            }
+            record_id = vault.store_entry(audit_entry)
+            result["audit_record_id"] = record_id
+        else:
+            result["audit_record_id"] = None
+
         return result
 
+    except VaultDecryptionError as e:
+        # Vault failures must never be silently hidden — raise a specific 503
+        # so it's clear the scoring succeeded but the audit store failed.
+        raise HTTPException(status_code=503, detail=f"Vault storage failed: {str(e)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Scoring failed: {str(e)}")
+
+
+@app.get("/vault/{record_id}")
+def read_vault_entry(record_id: str):
+    """
+    Retrieve and decrypt a vault audit record by its record_id.
+    Returns the original plaintext audit entry for demo/verification purposes.
+    Only records for High and Critical risk events are stored.
+    """
+    try:
+        entry = vault.read_entry(record_id)
+        return {"record_id": record_id, "audit_entry": entry}
+    except VaultRecordNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    except VaultDecryptionError as exc:
+        raise HTTPException(status_code=500, detail=f"Vault decryption failed: {exc}")

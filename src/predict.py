@@ -142,8 +142,11 @@ class RiskPredictor:
             else:
                 continue  # feature not in row at all, skip
 
-            # Skip features that aren't elevated -- no point surfacing them
-            if z <= 0 and raw_val == 0:
+            # Skip features that aren't significantly deviating
+            is_drop = z < -1.5
+            is_spike = z > 1.0 or (z > 0 and raw_val > 0) or (base_feat == "suspicious_url_events" and raw_val > 0)
+            
+            if not (is_drop or is_spike):
                 continue
 
             # Look up the user's personal mean from the saved baseline stats
@@ -155,13 +158,14 @@ class RiskPredictor:
                 )
 
             # Build the human-readable description
-            if user_baseline is not None and user_baseline >= 0.05:
+            if is_drop and user_baseline is not None:
+                desc = f"a sharp drop in {label} ({int(raw_val)} vs normal ~{user_baseline:.1f})"
+            elif user_baseline is not None and user_baseline >= 0.05:
                 desc = (
-                    f"{int(raw_val)} {label} "
-                    f"(your normal: ~{user_baseline:.1f})"
+                    f"a spike in {label} ({int(raw_val)} vs normal ~{user_baseline:.1f})"
                 )
             elif user_baseline is not None and raw_val > 0:
-                desc = f"{int(raw_val)} {label} (normally none)"
+                desc = f"a spike in {label} ({int(raw_val)}, normally none)"
             else:
                 desc = f"{int(raw_val)} {label}"
 

@@ -4,10 +4,10 @@ Run from the project root:
     python test_explain.py
 """
 import sys
+import pandas as pd
 sys.path.insert(0, "src")
 
-import pandas as pd
-from predict import RiskPredictor
+from src.predict import RiskPredictor
 
 predictor = RiskPredictor("models/model_v1.pkl")
 

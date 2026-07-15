@@ -21,8 +21,7 @@ import pandas as pd
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-sys.path.insert(0, "src")
-from predict import RiskPredictor
+from src.predict import RiskPredictor
 
 # ── Colour helpers (works on most terminals; degrades gracefully if not) ─────
 RESET  = "\033[0m"
