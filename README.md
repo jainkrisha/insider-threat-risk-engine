@@ -85,6 +85,7 @@ If you want to test the raw JSON endpoint:
 ### The CLI Demo
 If you prefer the command line, you can run the terminal demo script:
 ```bash
++cd backend
 python demo.py
 ```
 
@@ -124,16 +125,16 @@ The Risk Engine (`src/train.py` and `src/predict.py`) processes 15 behavioral fe
 
 ## Quantum-Safe Audit Vault
 
-Every High or Critical risk event triggers an encrypted audit entry stored in `vault_store.jsonl`. The encryption uses a **genuine hybrid KEM combiner** â€” the same pattern Chrome and Cloudflare use for post-quantum TLS.
+Every High or Critical risk event triggers an encrypted audit entry stored in `vault_store.jsonl`. The encryption uses a **genuine hybrid KEM combiner** the same pattern Chrome and Cloudflare use for post-quantum TLS.
 
 ### Why hybrid?
 
-A purely classical scheme (e.g. ECDH alone) becomes vulnerable once a large quantum computer is available â€” a "harvest now, decrypt later" attacker could record today's ciphertext and decrypt it years from now. A purely post-quantum scheme is newer and less battle-tested against classical attacks.
+A purely classical scheme (e.g. ECDH alone) becomes vulnerable once a large quantum computer is available a "harvest now, decrypt later" attacker could record today's ciphertext and decrypt it years from now. A purely post-quantum scheme is newer and less battle-tested against classical attacks.
 
 Hybrid encryption solves both:
-1. **X25519** (classical ECDH) â€” extremely well-studied, fast, currently unbroken
-2. **ML-KEM-768** (NIST FIPS 203 standard) â€” quantum-resistant, lattice-based
-3. **HKDF-SHA256** combines both shared secrets into one 32-byte AES key â€” an attacker must break **both** algorithms to recover any key
+1. **X25519** (classical ECDH) extremely well-studied, fast, currently unbroken
+2. **ML-KEM-768** (NIST FIPS 203 standard) quantum-resistant, lattice-based
+3. **HKDF-SHA256** combines both shared secrets into one 32-byte AES key an attacker must break **both** algorithms to recover any key
 4. **AES-256-GCM** encrypts the audit payload with authenticated encryption (tamper-evident)
 
 ### How it works per record
@@ -141,14 +142,14 @@ Hybrid encryption solves both:
 ```
 Encrypt:
   1. Generate fresh ephemeral X25519 keypair
-  2. ECDH(ephemeral_priv, vault_x25519_pub) â†’ classical_secret
-  3. ML-KEM-768.Encapsulate(vault_mlkem_pub) â†’ (pq_secret, kem_ciphertext)
-  4. HKDF(classical_secret || pq_secret) â†’ 32-byte AES key
-  5. AES-256-GCM.Encrypt(key, audit_json) â†’ ciphertext
+  2. ECDH(ephemeral_priv, vault_x25519_pub) classical_secret
+  3. ML-KEM-768.Encapsulate(vault_mlkem_pub) (pq_secret, kem_ciphertext)
+  4. HKDF(classical_secret || pq_secret) 32-byte AES key
+  5. AES-256-GCM.Encrypt(key, audit_json) ciphertext
   6. Store: {eph_x25519_pub, kem_ciphertext, nonce, ciphertext} as one JSONL line
 
 Decrypt:
-  Reverse steps 5â†’1 using vault's stored long-term private keys
+  Reverse steps using vault's stored long-term private keys
 ```
 
 ### Live demo verification
