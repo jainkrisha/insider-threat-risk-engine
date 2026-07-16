@@ -1,4 +1,4 @@
-FINSPARK PROJECT SUMMARY
+﻿Vigil PROJECT SUMMARY
 =======================
 
 This file serves as a final summary of the features completed for the Privileged Access Misuse & Insider Threat Detection engine.
@@ -33,6 +33,7 @@ This file serves as a final summary of the features completed for the Privileged
 All backend testing suites have been executed successfully.
 
 [TEST SUITE]: test_vault.py
+[RUN WITH]: python test_vault.py   (standalone script â€” NOT pytest)
 [STATUS]: PASSED (6/6 tests passed)
 [DETAILS]:
  - Test 1: encrypt_entry -> decrypt_entry round-trip passes flawlessly.
