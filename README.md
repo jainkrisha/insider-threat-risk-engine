@@ -11,7 +11,7 @@ Vigil is an AI-driven behavioral analysis engine designed to detect misuse of pr
 - **Interactive Web Dashboard**: A built-in modern UI to analyze users and visualize threat intelligence instantly.
 - **Quantum-safe audit vault (hybrid X25519 + ML-KEM-768)**: Every High/Critical risk action is encrypted using a genuine hybrid classical + post-quantum KEM before being stored â€” and can be decrypted on demand for live demo verification.
 
-## ðŸš€ Tech Stack
+## Tech Stack
 - **Machine Learning**: `scikit-learn`, `pandas`, `numpy`, `joblib`
 - **Backend API**: `FastAPI`, `uvicorn`, `pydantic`
 - **Frontend UI**: HTML5, Tailwind CSS (Dark Mode/Glassmorphism)
@@ -19,7 +19,7 @@ Vigil is an AI-driven behavioral analysis engine designed to detect misuse of pr
 
 ---
 
-## âš™ï¸ Setup & Installation
+## Setup & Installation
 
 ### 1. Clone the repository
 ```bash
@@ -30,7 +30,7 @@ cd insider-threat-risk-engine
 ### 2. Install Dependencies
 Ensure you have Python 3.9+ installed, then run:
 ```bash
-pip install -r requirements.txt
+pip install -r backend/requirements.txt
 ```
 
 ### 3. Download the Dataset
@@ -122,7 +122,7 @@ The Risk Engine (`src/train.py` and `src/predict.py`) processes 15 behavioral fe
 
 ---
 
-## ðŸ”’ Quantum-Safe Audit Vault
+## Quantum-Safe Audit Vault
 
 Every High or Critical risk event triggers an encrypted audit entry stored in `vault_store.jsonl`. The encryption uses a **genuine hybrid KEM combiner** â€” the same pattern Chrome and Cloudflare use for post-quantum TLS.
 
