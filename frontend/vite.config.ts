@@ -10,6 +10,7 @@ export default defineConfig({
       '/score':  { target: 'http://127.0.0.1:8000', changeOrigin: true },
       '/health': { target: 'http://127.0.0.1:8000', changeOrigin: true },
       '/vault':  { target: 'http://127.0.0.1:8000', changeOrigin: true },
+      '/trend':  { target: 'http://127.0.0.1:8000', changeOrigin: true },
     },
   },
 })

@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
-import { ShieldCheck, Menu, X, Activity } from 'lucide-react'
+import { ShieldCheck, Menu, X, Activity, Zap } from 'lucide-react'
 import { checkHealth } from '../api'
 
 const NAV_LINKS = [
-  { to: '/',         label: 'Home' },
-  { to: '/about',    label: 'About' },
-  { to: '/features', label: 'Features' },
+  { to: '/',          label: 'Home' },
+  { to: '/about',     label: 'About' },
+  { to: '/features',  label: 'Features' },
 ]
 
 export default function NavBar() {
@@ -23,14 +23,13 @@ export default function NavBar() {
   }, [])
 
   return (
-    <header className="sticky top-0 z-50 glass border-b border-white/5">
+    <header className="sticky top-0 z-50 bg-[#dfd2bc] border-b border-[#cab593]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
 
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 font-bold text-lg">
-          <ShieldCheck className="w-6 h-6 text-indigo-400" />
-          <span className="gradient-text">FinSpark</span>
-          <span className="hidden sm:inline text-slate-400 font-normal text-sm">Risk Engine</span>
+        <Link to="/" className="flex items-center gap-2 font-bold text-xl shrink-0">
+          <ShieldCheck className="w-6 h-6 text-[#496b52]" />
+          <span className="gradient-text">Vigil</span>
         </Link>
 
         {/* Desktop Nav */}
@@ -40,8 +39,8 @@ export default function NavBar() {
               key={to}
               to={to}
               end={to === '/'}
-              className={({ isActive }) => `text-sm font-medium transition-colors px-3 py-1.5 rounded-md ${
-                isActive ? 'text-indigo-400 bg-indigo-500/10' : 'text-slate-300 hover:text-white hover:bg-white/5'
+              className={({ isActive }) => `text-base font-medium transition-colors px-4 py-2 rounded-md ${
+                isActive ? 'text-[#496b52] bg-[#496b52]/10' : 'text-[#26201b] hover:text-[#26201b] hover:bg-[#cab593]/50'
               }`}
             >
               {label}
@@ -49,24 +48,29 @@ export default function NavBar() {
           ))}
         </nav>
 
-        {/* Right: health + Dashboard CTA */}
-        <div className="flex items-center gap-3">
+        {/* Right: API status + Live Demo CTA */}
+        <div className="flex items-center gap-3 shrink-0">
           {/* API health pill */}
           <span
-            title={healthy === null ? 'Checking API…' : healthy ? 'Backend healthy' : 'Backend offline'}
-            className={`hidden sm:flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border ${
+            title={healthy === null ? 'Checking API…' : healthy ? 'Backend healthy — model loaded' : 'Backend offline'}
+            className={`hidden sm:flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-full border ${
               healthy === null
-                ? 'border-slate-600 text-slate-500'
+                ? 'border-slate-600 text-[#26201b]'
                 : healthy
-                ? 'border-emerald-500/40 text-emerald-400 bg-emerald-500/10'
-                : 'border-red-500/40 text-red-400 bg-red-500/10'
+                ? 'border-[#496b52]/40 text-[#496b52] bg-[#496b52]/10'
+                : 'border-red-500/40 text-[#92402d] bg-[#92402d]/10'
             }`}
           >
             <Activity className="w-3 h-3" />
             {healthy === null ? 'Checking…' : healthy ? 'API live' : 'API offline'}
           </span>
 
-          <Link to="/dashboard" className="btn-primary text-sm py-2 px-4 hidden md:flex">
+          {/* Launch App — primary CTA */}
+          <Link
+            to="/dashboard"
+            className="btn-primary text-base py-2.5 px-5 hidden md:flex items-center gap-1.5"
+          >
+            <Zap className="w-3.5 h-3.5" />
             Dashboard
           </Link>
 
@@ -79,7 +83,7 @@ export default function NavBar() {
 
       {/* Mobile drawer */}
       {open && (
-        <div className="md:hidden glass border-t border-white/5 px-4 py-4 flex flex-col gap-1 animate-fade-in">
+        <div className="md:hidden bg-[#dfd2bc] border-b border-[#cab593] px-4 py-4 flex flex-col gap-1 animate-fade-in absolute w-full left-0 top-16 shadow-lg">
           {NAV_LINKS.map(({ to, label }) => (
             <NavLink
               key={to}
@@ -87,15 +91,15 @@ export default function NavBar() {
               end={to === '/'}
               className={({ isActive }) =>
                 isActive
-                  ? 'px-4 py-2.5 rounded-lg text-indigo-400 bg-indigo-500/10 font-medium'
-                  : 'px-4 py-2.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition-colors'
+                  ? 'px-4 py-3 rounded-lg text-[#496b52] bg-[#496b52]/10 font-medium text-lg'
+                  : 'px-4 py-3 rounded-lg text-[#26201b] hover:text-[#26201b] hover:bg-[#cab593]/50 transition-colors text-lg'
               }
             >
               {label}
             </NavLink>
           ))}
-          <Link to="/dashboard" className="btn-primary text-sm mt-2 text-center">
-            Open Dashboard
+          <Link to="/dashboard" className="btn-primary text-base py-3 mt-2 text-center flex items-center justify-center gap-2">
+            <Zap className="w-3.5 h-3.5" /> Dashboard
           </Link>
         </div>
       )}

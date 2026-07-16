@@ -1,9 +1,9 @@
 type Tier = 'Low' | 'Medium' | 'High' | 'Critical'
 
 const STYLES: Record<Tier, string> = {
-  Low:      'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
-  Medium:   'bg-yellow-500/15  text-yellow-400  border-yellow-500/30',
-  High:     'bg-orange-500/15  text-orange-400  border-orange-500/30',
+  Low:      'bg-[#496b52]/15 text-indigo-400 border-[#496b52]/30',
+  Medium:   'bg-[#92402d]/15  text-pink-400  border-[#92402d]/30',
+  High:     'bg-[#92402d]/15  text-purple-400  border-[#92402d]/30',
   Critical: 'bg-red-500/15     text-red-400     border-red-500/30',
 }
 

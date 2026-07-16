@@ -8,7 +8,7 @@ interface Props {
 
 export default function AuditBadge({ recordId, onViewAudit }: Props) {
   return (
-    <div className="flex items-start gap-3 bg-[#e9e3d5] border border-[#d8cbb0] rounded-xl p-4 animate-fade-in shadow-sm">
+    <div className="flex items-start gap-3 bg-[#dcceb4] border border-[#cab593] rounded-xl p-4 animate-fade-in shadow-sm">
       <div className="mt-0.5 w-8 h-8 rounded-full bg-[#496b52]/10 border border-[#496b52]/20 flex items-center justify-center shrink-0">
         <Lock className="w-4 h-4 text-[#496b52]" />
       </div>

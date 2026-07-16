@@ -9,13 +9,13 @@ Vigil is an AI-driven behavioral analysis engine designed to detect misuse of pr
 - **Real-Time Detection API**: A lightning-fast FastAPI backend that scores user activity on the fly.
 - **Risk-Based Access Control**: Automatically recommends security actions (e.g., `require_mfa`, `restrict_removable_media`) based on the dynamically calculated risk tier (Low, Medium, High, Critical).
 - **Interactive Web Dashboard**: A built-in modern UI to analyze users and visualize threat intelligence instantly.
-- **Quantum-safe audit vault (hybrid X25519 + ML-KEM-768)**: Every High/Critical risk action is encrypted using a genuine hybrid classical + post-quantum KEM before being stored â€” and can be decrypted on demand for live demo verification.
+- **Quantum-safe audit vault (hybrid X25519 + ML-KEM-768)**: Every High/Critical risk action is encrypted using a genuine hybrid classical + post-quantum KEM before being stored — and can be decrypted on demand for live demo verification.
 
 ## Tech Stack
 - **Machine Learning**: `scikit-learn`, `pandas`, `numpy`, `joblib`
 - **Backend API**: `FastAPI`, `uvicorn`, `pydantic`
 - **Frontend UI**: HTML5, Tailwind CSS (Dark Mode/Glassmorphism)
-- **Cryptography**: `pyca/cryptography` 48+ (ML-KEM-768, X25519, AES-256-GCM) â€” hybrid classical + post-quantum encryption for audit logs, requires OpenSSL 3.5+.
+- **Cryptography**: `pyca/cryptography` 48+ (ML-KEM-768, X25519, AES-256-GCM) — hybrid classical + post-quantum encryption for audit logs, requires OpenSSL 3.5+.
 
 ---
 
@@ -31,6 +31,9 @@ cd insider-threat-risk-engine
 Ensure you have Python 3.9+ installed, then run:
 ```bash
 pip install -r backend/requirements.txt
+cd frontend
+npm install
+cd ..
 ```
 
 ### 3. Download the Dataset
@@ -57,9 +60,13 @@ Because the raw CERT r4.2 dataset and generated feature tables are very large (1
 
 ## 🎯 How to Run the Prototype
 
-### The Interactive Web Dashboard (Recommended)
-We built a beautiful, real-time React web dashboard to demonstrate the engine.
+### One-Click Startup (Windows)
+For the quickest way to evaluate the prototype:
+1. Double-click the **`start.bat`** file in the root directory.
+2. This will automatically start both the FastAPI backend and the Vite frontend in a unified window.
+3. Once loaded, it will automatically open the Dashboard at **http://localhost:5173** in your default browser.
 
+### Manual Startup
 1. **Start the backend server:**
    ```bash
    cd backend
@@ -68,13 +75,8 @@ We built a beautiful, real-time React web dashboard to demonstrate the engine.
 2. **Start the frontend UI (in a new terminal):**
    ```bash
    cd frontend
-   npm install
    npm run dev
    ```
-3. **Open the Dashboard:**
-   Go to the URL provided by Vite (usually **http://localhost:5173**) in your web browser.
-4. **Run an Analysis:**
-   Navigate to the Dashboard, click a preset like "Critical Threat" and click "Run Analysis" to see the engine detect a malicious user.
 
 ### The Developer API (Swagger UI)
 If you want to test the raw JSON endpoint:
@@ -85,7 +87,7 @@ If you want to test the raw JSON endpoint:
 ### The CLI Demo
 If you prefer the command line, you can run the terminal demo script:
 ```bash
-+cd backend
+cd backend
 python demo.py
 ```
 
@@ -95,18 +97,20 @@ python demo.py
 
 ### Vault Tests (6 tests — no dataset needed)
 ```bash
+cd backend
 python test_vault.py
 ```
 This is a standalone script (not pytest). It tests the full quantum-safe vault:
-- encrypt → decrypt round-trip
+- encrypt -> decrypt round-trip
 - No plaintext leaks into stored bytes
 - Byte-level and nonce-level tampering detection
 - Unknown record ID handling
 - ML-KEM-768 ciphertext size validation (1088 bytes)
-- End-to-end store → read round-trip
+- End-to-end store -> read round-trip
 
 ### XAI / Narrative Tests (4 assertions)
 ```bash
+cd backend
 python -m pytest test_explanation.py -v
 ```
 
@@ -123,29 +127,29 @@ The Risk Engine (`src/train.py` and `src/predict.py`) processes 15 behavioral fe
 
 ---
 
-## Quantum-Safe Audit Vault
+## 🔒 Quantum-Safe Audit Vault
 
-Every High or Critical risk event triggers an encrypted audit entry stored in `vault_store.jsonl`. The encryption uses a **genuine hybrid KEM combiner** the same pattern Chrome and Cloudflare use for post-quantum TLS.
+Every High or Critical risk event triggers an encrypted audit entry stored in `vault_store.jsonl`. The encryption uses a **genuine hybrid KEM combiner** — the same pattern Chrome and Cloudflare use for post-quantum TLS.
 
 ### Why hybrid?
 
-A purely classical scheme (e.g. ECDH alone) becomes vulnerable once a large quantum computer is available a "harvest now, decrypt later" attacker could record today's ciphertext and decrypt it years from now. A purely post-quantum scheme is newer and less battle-tested against classical attacks.
+A purely classical scheme (e.g. ECDH alone) becomes vulnerable once a large quantum computer is available — a "harvest now, decrypt later" attacker could record today's ciphertext and decrypt it years from now. A purely post-quantum scheme is newer and less battle-tested against classical attacks.
 
 Hybrid encryption solves both:
-1. **X25519** (classical ECDH) extremely well-studied, fast, currently unbroken
-2. **ML-KEM-768** (NIST FIPS 203 standard) quantum-resistant, lattice-based
-3. **HKDF-SHA256** combines both shared secrets into one 32-byte AES key an attacker must break **both** algorithms to recover any key
+1. **X25519** (classical ECDH) — extremely well-studied, fast, currently unbroken
+2. **ML-KEM-768** (NIST FIPS 203 standard) — quantum-resistant, lattice-based
+3. **HKDF-SHA256** combines both shared secrets into one 32-byte AES key — an attacker must break **both** algorithms to recover any key
 4. **AES-256-GCM** encrypts the audit payload with authenticated encryption (tamper-evident)
 
 ### How it works per record
 
-```
+```text
 Encrypt:
   1. Generate fresh ephemeral X25519 keypair
-  2. ECDH(ephemeral_priv, vault_x25519_pub) classical_secret
-  3. ML-KEM-768.Encapsulate(vault_mlkem_pub) (pq_secret, kem_ciphertext)
-  4. HKDF(classical_secret || pq_secret) 32-byte AES key
-  5. AES-256-GCM.Encrypt(key, audit_json) ciphertext
+  2. ECDH(ephemeral_priv, vault_x25519_pub) -> classical_secret
+  3. ML-KEM-768.Encapsulate(vault_mlkem_pub) -> (pq_secret, kem_ciphertext)
+  4. HKDF(classical_secret || pq_secret) -> 32-byte AES key
+  5. AES-256-GCM.Encrypt(key, audit_json) -> ciphertext
   6. Store: {eph_x25519_pub, kem_ciphertext, nonce, ciphertext} as one JSONL line
 
 Decrypt:

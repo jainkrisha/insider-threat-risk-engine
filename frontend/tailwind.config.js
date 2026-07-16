@@ -16,6 +16,7 @@ export default {
         'glow-emerald': '0 0 40px -10px rgba(16, 185, 129, 0.4)',
         'glow-red': '0 0 40px -10px rgba(239, 68, 68, 0.4)',
         'glow-green': '0 0 40px -10px rgba(34, 197, 94, 0.4)',
+        'glow-teal': '0 0 40px -10px rgba(146, 64, 45, 0.35)',
       },
       animation: {
         'fade-in': 'fadeIn 0.4s ease-out',

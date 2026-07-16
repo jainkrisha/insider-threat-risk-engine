@@ -238,28 +238,70 @@ class RiskPredictor:
         Returns
         -------
         dict with keys:
-            user          -- user ID
-            risk_score    -- 0-100 float
-            risk_tier     -- Low / Medium / High / Critical
-            model_version -- version string from the saved bundle
-            top_signals   -- list of up to `top_n` dicts, each with:
-                               feature       raw feature name
-                               zscore        deviation from user's personal baseline
-                               raw_value     actual count/value for this day
-                               user_baseline user's typical daily average
-                               label         human-readable explanation string
+            user                -- user ID
+            risk_score          -- 0-100 float (after privilege multiplier)
+            behavior_score      -- 0-100 float (raw model score, pre-privilege)
+            risk_tier           -- Low / Medium / High / Critical
+            privilege_tier      -- standard / elevated / admin / domain_admin
+            privilege_multiplier -- float multiplier applied to behavior_score
+            hndl_exposure_score -- 0-100 float (Harvest-Now-Decrypt-Later risk)
+            hndl_tier           -- Low / Medium / High / Critical
+            model_version       -- version string from the saved bundle
+            top_signals         -- list of up to `top_n` signal dicts
         """
         df = pd.DataFrame([row_dict])
         scored = self.score_batch(df)   # z-score cols are on `scored` after this
         out = scored.iloc[0]
         user = str(out["user"])
 
+        # Privilege-aware scoring
+        privilege_tier = str(row_dict.get("privilege_tier", "standard") or "standard")
+        _PRIVILEGE_MULTIPLIERS = {
+            "standard":    1.0,
+            "elevated":    1.15,
+            "admin":       1.30,
+            "domain_admin": 1.50,
+        }
+        multiplier = _PRIVILEGE_MULTIPLIERS.get(privilege_tier, 1.0)
+        behavior_score = round(float(out["risk_score"]), 2)
+        risk_score = round(min(float(out["risk_score"]) * multiplier, 100.0), 2)
+
+        # Re-compute risk tier from the privilege-adjusted score
+        risk_tier = out["risk_tier"]
+        if risk_score >= self.tier_cutoffs.get("Critical", 89):
+            risk_tier = "Critical"
+        elif risk_score >= self.tier_cutoffs.get("High", 68):
+            risk_tier = "High"
+        elif risk_score >= self.tier_cutoffs.get("Medium", 41):
+            risk_tier = "Medium"
+        else:
+            risk_tier = "Low"
+
+        # HNDL (Harvest-Now-Decrypt-Later) exposure score
+        # Based on data egress channels: removable media + external email
+        removable = float(row_dict.get("removable_file_events", 0) or 0)
+        ext_email = float(row_dict.get("external_email_count", 0) or 0)
+        hndl_score = round(min((removable * 4.0 + ext_email * 2.5), 100.0), 2)
+        if hndl_score >= 75:
+            hndl_tier = "Critical"
+        elif hndl_score >= 50:
+            hndl_tier = "High"
+        elif hndl_score >= 25:
+            hndl_tier = "Medium"
+        else:
+            hndl_tier = "Low"
+
         return {
-            "user":          user,
-            "risk_score":    round(float(out["risk_score"]), 2),
-            "risk_tier":     out["risk_tier"],
-            "model_version": self.version,
-            "top_signals":   self._get_top_signals(out, user, top_n=top_n),
+            "user":                user,
+            "risk_score":          risk_score,
+            "behavior_score":      behavior_score,
+            "risk_tier":           risk_tier,
+            "privilege_tier":      privilege_tier,
+            "privilege_multiplier": multiplier,
+            "hndl_exposure_score": hndl_score,
+            "hndl_tier":           hndl_tier,
+            "model_version":       self.version,
+            "top_signals":         self._get_top_signals(out, user, top_n=top_n),
         }
 
 

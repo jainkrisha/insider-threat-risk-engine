@@ -6,11 +6,11 @@
 
 @layer base {
   * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
+  html { scroll-behavior: smooth; font-size: 18px; }
   body {
     font-family: 'Inter', sans-serif;
-    background-color: #0f172a;
-    color: #f8fafc;
+    background-color: #e8dfcd;
+    color: #26201b;
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
   }
@@ -18,26 +18,24 @@
 
 @layer components {
   .glass {
-    background: rgba(30, 41, 59, 0.72);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: transparent;
+    border: 1px solid #cab593;
+    border-radius: 8px;
   }
   .glass-hover {
-    @apply glass transition-all duration-200 hover:border-blue-500/30 hover:bg-slate-700/60;
-    @apply glass hover:bg-slate-800/60 hover:border-indigo-400/30 transition-all duration-300;
+    @apply glass transition-all duration-200 hover:border-[#a39882] hover:bg-[#dfd2bc];
   }
   .btn-primary {
-    @apply bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-lg;
+    @apply bg-[#26201b] hover:bg-[#38332a] text-[#dfd2bc] px-6 py-3 rounded-lg text-base font-semibold transition-all shadow-sm;
   }
   .btn-ghost {
-    @apply px-4 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/5
+    @apply px-5 py-2.5 rounded-lg text-sm text-[#544c41] hover:text-[#26201b] hover:bg-[#d4c5a9]
            transition-all duration-150 cursor-pointer;
   }
   .gradient-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-cyan-400;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-[#496b52] to-[#92402d];
   }
   .section-label {
-    @apply text-xs font-semibold uppercase tracking-[0.2em] text-blue-400;
+    @apply text-xs font-bold uppercase tracking-[0.2em] text-[#496b52];
   }
 }

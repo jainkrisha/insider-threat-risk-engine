@@ -136,3 +136,52 @@ HIGH_RISK_DAY_THRESHOLD = 70.0   # day score above this counts as a "high-risk d
 AGG_WEIGHT_MAX           = 0.50   # weight on max daily score
 AGG_WEIGHT_MEAN          = 0.30   # weight on mean daily score
 AGG_WEIGHT_HIGHDAYS      = 0.20   # weight on high-risk day rate (0-100 scaled)
+
+
+# ---------------------------------------------------------------------------
+# Privilege-aware scoring
+# ---------------------------------------------------------------------------
+# The four privilege tiers supported by the /score endpoint.
+PRIVILEGE_TIERS = ["standard", "elevated", "admin", "domain_admin"]
+
+# Extra recommended actions layered on top of the base tier actions when
+# a privileged account exceeds a given risk tier.
+# Structure: { privilege_tier: { risk_tier: [action, ...] } }
+PRIVILEGE_ACTIONS = {
+    "standard": {
+        "Low":      [],
+        "Medium":   [],
+        "High":     [],
+        "Critical": [],
+    },
+    "elevated": {
+        "Low":      [],
+        "Medium":   ["log_enhanced"],
+        "High":     ["suspend_elevated_access", "log_enhanced"],
+        "Critical": ["revoke_elevated_access", "alert_soc_immediately"],
+    },
+    "admin": {
+        "Low":      [],
+        "Medium":   ["log_enhanced"],
+        "High":     ["revoke_admin_access", "alert_soc_immediately"],
+        "Critical": ["revoke_admin_access", "isolate_account", "alert_soc_immediately"],
+    },
+    "domain_admin": {
+        "Low":      ["log_standard"],
+        "Medium":   ["log_enhanced", "peer_review"],
+        "High":     ["suspend_domain_admin", "alert_soc_immediately", "incident_report"],
+        "Critical": ["revoke_domain_admin", "isolate_account", "alert_soc_immediately", "incident_report"],
+    },
+}
+
+# ---------------------------------------------------------------------------
+# HNDL (Harvest-Now-Decrypt-Later) exposure actions
+# ---------------------------------------------------------------------------
+# Actions triggered based on the HNDL exposure tier, independent of
+# the behavioral risk tier. Focuses on PQC migration and data egress review.
+HNDL_ACTIONS = {
+    "Low":      [],
+    "Medium":   ["review_data_exports"],
+    "High":     ["review_data_exports", "flag_pqc_migration"],
+    "Critical": ["review_data_exports", "flag_pqc_migration", "restrict_external_transfer", "alert_soc_immediately"],
+}
