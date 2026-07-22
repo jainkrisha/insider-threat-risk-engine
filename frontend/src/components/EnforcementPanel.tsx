@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Shield, AlertTriangle, Lock, UserX, Bell, Key,
   Smartphone, CheckCircle2, Loader2, ShieldCheck
@@ -113,11 +113,26 @@ const SEVERITY_STYLES: Record<string, string> = {
 // ---------------------------------------------------------------------------
 interface Props {
   actions: string[]
+  sessionStatus?: string
+  onVerifyIdentity?: () => void
 }
 
-export default function EnforcementPanel({ actions }: Props) {
-  const [dispatched, setDispatched] = useState<Set<string>>(new Set())
-  const [loading, setLoading]       = useState<string | null>(null)
+export default function EnforcementPanel({ actions, sessionStatus, onVerifyIdentity }: Props) {
+  const [visibleActions, setVisibleActions] = useState<Set<string>>(new Set())
+
+  // Staggered animation for auto-enforced actions
+  useEffect(() => {
+    if (actions.length === 0) return
+    
+    // Reset state on new actions list
+    setVisibleActions(new Set())
+    
+    actions.forEach((action, i) => {
+      setTimeout(() => {
+        setVisibleActions(prev => new Set([...prev, action]))
+      }, (i + 1) * 400) // 400ms stagger per item
+    })
+  }, [actions])
 
   if (actions.length === 0) {
     return (
@@ -125,61 +140,63 @@ export default function EnforcementPanel({ actions }: Props) {
     )
   }
 
-  async function dispatch(action: string) {
-    if (dispatched.has(action)) return
-    setLoading(action)
-    // Simulate a ~600ms round-trip to a PAM/SIEM/MDM API
-    await new Promise(r => setTimeout(r, 620))
-    setDispatched(prev => new Set([...prev, action]))
-    setLoading(null)
-  }
-
-  const allDispatched = actions.every(a => dispatched.has(a))
+  const allVisible = actions.every(a => visibleActions.has(a))
+  const isStepUp = sessionStatus === 'step_up_required'
 
   return (
     <div className="space-y-3">
-      {/* Action buttons */}
+      {/* Session suspended alert (Only for step_up_required do we show the Verify button) */}
+      {isStepUp && onVerifyIdentity && (
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-orange-50 border border-orange-200 rounded-xl p-4 animate-fade-in">
+          <div>
+            <p className="text-sm font-semibold text-orange-900">Session Step-Up Required</p>
+            <p className="text-xs text-orange-800/80 mt-0.5">
+              Access is restricted. User identity must be verified to continue.
+            </p>
+          </div>
+          <button
+            onClick={onVerifyIdentity}
+            className="px-4 py-2 bg-orange-600 text-white text-sm font-medium rounded-lg shadow hover:bg-orange-700 transition-colors shrink-0"
+          >
+            Verify Identity
+          </button>
+        </div>
+      )}
+
+      {/* Action list */}
       <div className="space-y-2">
-        {actions.map(action => {
+        {actions.map((action, idx) => {
           const meta      = ACTION_META[action] ?? {
             icon: <Shield className="w-4 h-4" />,
             label: action.replace(/_/g, ' '),
             confirm: `✅ ${action.replace(/_/g, ' ')} executed`,
             severity: 'medium',
           }
-          const isDone    = dispatched.has(action)
-          const isLoading = loading === action
+          const isVisible = visibleActions.has(action)
 
           return (
-            <div key={action} className="space-y-1.5">
-              <button
-                onClick={() => dispatch(action)}
-                disabled={isDone || isLoading}
-                className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl border text-sm font-medium transition-all duration-200
-                  ${isDone
-                    ? 'border-emerald-600/40 bg-emerald-100 text-emerald-900 cursor-default'
-                    : `${SEVERITY_STYLES[meta.severity]} cursor-pointer active:scale-[0.99]`
-                  }`}
-              >
-                <span className="flex items-center gap-2.5">
-                  {isDone
-                    ? <CheckCircle2 className="w-4 h-4 text-indigo-400 shrink-0" />
-                    : <span className="shrink-0 opacity-80">{meta.icon}</span>
-                  }
-                  {meta.label}
-                </span>
-                {isLoading && <Loader2 className="w-3.5 h-3.5 animate-spin opacity-80" />}
-                {isDone    && <span className="text-xs font-bold text-emerald-700">Executed</span>}
-                {!isDone && !isLoading && (
-                  <span className="text-xs opacity-70 font-semibold">Click to dispatch →</span>
-                )}
-              </button>
-
-              {/* Confirmation message */}
-              {isDone && (
-                <p className="text-xs text-indigo-400/80 pl-4 font-mono animate-fade-in">
-                  {meta.confirm}
-                </p>
+            <div key={action} className="space-y-1.5 overflow-hidden">
+              {isVisible ? (
+                <div className="animate-fade-in-up">
+                  <div className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl border text-sm font-medium border-emerald-600/40 bg-emerald-100 text-emerald-900`}>
+                    <span className="flex items-center gap-2.5">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      {meta.label}
+                    </span>
+                    <span className="text-xs font-bold text-emerald-700">Enforced automatically</span>
+                  </div>
+                  <p className="text-xs text-emerald-600/80 pl-4 mt-1 font-mono">
+                    {meta.confirm}
+                  </p>
+                </div>
+              ) : (
+                <div className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-400 opacity-50">
+                  <span className="flex items-center gap-2.5">
+                    <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                    {meta.label}
+                  </span>
+                  <span className="text-xs font-semibold">Enforcing...</span>
+                </div>
               )}
             </div>
           )
@@ -187,13 +204,13 @@ export default function EnforcementPanel({ actions }: Props) {
       </div>
 
       {/* All-clear banner */}
-      {allDispatched && (
+      {allVisible && (
         <div className="flex items-center gap-3 bg-indigo-900/30 border border-[#496b52]/40 rounded-xl px-4 py-3 animate-fade-in">
           <ShieldCheck className="w-5 h-5 text-indigo-400 shrink-0" />
           <div>
             <p className="text-sm font-semibold text-indigo-300">Threat Contained</p>
             <p className="text-xs text-indigo-400/70 mt-0.5">
-              All {actions.length} enforcement actions executed successfully
+              All {actions.length} enforcement actions executed automatically
             </p>
           </div>
         </div>

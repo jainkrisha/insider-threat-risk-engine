@@ -109,6 +109,9 @@ except Exception as e:
 # Long-term keypairs are generated on first run and reloaded on subsequent runs.
 vault = HybridVault(key_dir="vault_keys")
 
+# Global in-memory state tracking for user sessions and automatic enforcement
+SESSION_STATES: Dict[str, Dict[str, Any]] = {}
+
 
 # Define the expected JSON payload for a scoring request.
 # Users must provide at least a 'user' ID. All other features are optional
@@ -451,6 +454,28 @@ def score_user_activity(request: ScoreRequest, _key: str = Depends(require_api_k
         else:
             result["audit_record_id"] = None
 
+        # Automatically determine authoritative session status based on risk tier
+        if tier == "Critical":
+            session_status = "suspended"
+        elif tier == "High":
+            session_status = "step_up_required"
+        elif tier == "Medium":
+            session_status = "allowed_monitored"
+        else:
+            session_status = "allowed"
+
+        # Apply enforced actions automatically server-side
+        now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        enforced_actions = [
+            {"action": action, "enforced_at": now_iso}
+            for action in result["recommended_actions"]
+        ]
+        
+        SESSION_STATES[result["user"]] = {
+            "session_status": session_status,
+            "enforced_actions": enforced_actions
+        }
+
         return result
 
     except VaultDecryptionError as e:
@@ -528,3 +553,31 @@ def get_user_trend(user_id: str, _key: str = Depends(require_api_key)):
             for entry in raw
         ]
     }
+
+
+@app.get("/session/{user_id}")
+def get_session_state(user_id: str, _key: str = Depends(require_api_key)):
+    """
+    Returns the current session status and enforced actions for a user.
+    """
+    if user_id not in SESSION_STATES:
+        return {"session_status": "allowed", "enforced_actions": []}
+    return SESSION_STATES[user_id]
+
+
+@app.post("/session/{user_id}/verify")
+def verify_session(user_id: str, _key: str = Depends(require_api_key)):
+    """
+    Simulates a human verifying their identity (e.g., completing an MFA challenge).
+    Flips the session status from 'step_up_required' to 'allowed_monitored'.
+    """
+    if user_id not in SESSION_STATES:
+        raise HTTPException(status_code=404, detail="Session not found.")
+    
+    if SESSION_STATES[user_id]["session_status"] == "step_up_required":
+        SESSION_STATES[user_id]["session_status"] = "allowed_monitored"
+    elif SESSION_STATES[user_id]["session_status"] == "suspended":
+        # We explicitly do NOT allow un-suspending from here, per requirements.
+        raise HTTPException(status_code=403, detail="Cannot verify identity for a suspended session.")
+    
+    return SESSION_STATES[user_id]

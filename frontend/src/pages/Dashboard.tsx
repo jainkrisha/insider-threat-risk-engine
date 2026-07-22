@@ -8,7 +8,7 @@ import TierBadge from '../components/TierBadge'
 import SignalBar from '../components/SignalBar'
 import AuditBadge from '../components/AuditBadge'
 import EnforcementPanel from '../components/EnforcementPanel'
-import { scoreUser, fetchUserTrend, DEMO_SCENARIOS, type ScoreResponse, type TrendPoint, type ScoreRequest } from '../api'
+import { scoreUser, fetchUserTrend, DEMO_SCENARIOS, fetchSessionState, verifySessionIdentity, type ScoreResponse, type TrendPoint, type ScoreRequest, type SessionStateResponse } from '../api'
 
 // ---------------------------------------------------------------------------
 // SVG Trend Chart
@@ -85,6 +85,7 @@ export default function Dashboard() {
   const [error, setError]     = useState<string | null>(null)
   const [result, setResult]   = useState<ScoreResponse | null>(null)
   const [trend, setTrend]     = useState<TrendPoint[] | null>(null)
+  const [sessionState, setSessionState] = useState<SessionStateResponse | null>(null)
 
   function set<K extends keyof ScoreRequest>(key: K, val: ScoreRequest[K]) {
     setForm(f => ({ ...f, [key]: val }))
@@ -110,6 +111,14 @@ export default function Dashboard() {
         fetchUserTrend(form.user).catch(() => null),
       ])
       setResult(res)
+      
+      try {
+        const sessionRes = await fetchSessionState(res.user)
+        setSessionState(sessionRes)
+      } catch (err) {
+        console.error("Failed to fetch session state", err)
+      }
+
       if (trendRes) {
         // Override the last bar ("today") with the actual computed score
         // so that different field values produce a visibly different chart
@@ -313,7 +322,25 @@ export default function Dashboard() {
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-[#26201b] font-mono pt-1">{result.user}</p>
+                  <div className="flex items-center justify-center gap-2 pt-1">
+                    <p className="text-xs text-[#26201b] font-mono">{result.user}</p>
+                    {sessionState && (
+                      <span className={`px-2 py-0.5 rounded-full text-xs border flex items-center gap-1 ${
+                        sessionState.session_status === 'suspended' 
+                          ? 'bg-red-100 text-red-800 border-red-200'
+                          : sessionState.session_status === 'step_up_required'
+                          ? 'bg-orange-100 text-orange-800 border-orange-200'
+                          : sessionState.session_status === 'allowed_monitored'
+                          ? 'bg-yellow-100 text-yellow-800 border-yellow-200'
+                          : 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                      }`}>
+                        {sessionState.session_status === 'suspended' && '🔒 Session Suspended'}
+                        {sessionState.session_status === 'step_up_required' && '🔐 Step-Up Verification Required'}
+                        {sessionState.session_status === 'allowed_monitored' && '👁 Allowed — Monitored'}
+                        {sessionState.session_status === 'allowed' && '✅ Allowed'}
+                      </span>
+                    )}
+                  </div>
                 </GlassCard>
 
                 <GlassCard className="flex flex-col justify-center">
@@ -348,7 +375,18 @@ export default function Dashboard() {
                   <h3 className="text-lg font-bold text-[#26201b] uppercase tracking-wider">Enforcement Actions</h3>
                   <span className="ml-auto text-base text-[#26201b] font-bold">{result.recommended_actions.length} recommended</span>
                 </div>
-                <EnforcementPanel actions={result.recommended_actions} />
+                <EnforcementPanel 
+                  actions={result.recommended_actions} 
+                  sessionStatus={sessionState?.session_status || 'allowed'}
+                  onVerifyIdentity={async () => {
+                    try {
+                      const updatedState = await verifySessionIdentity(result.user)
+                      setSessionState(updatedState)
+                    } catch (e) {
+                      console.error("Verification failed", e)
+                    }
+                  }}
+                />
               </GlassCard>
 
               {/* Audit badge */}
