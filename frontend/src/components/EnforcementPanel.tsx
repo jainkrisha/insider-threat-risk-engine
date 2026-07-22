@@ -208,8 +208,8 @@ export default function EnforcementPanel({ actions, sessionStatus, onVerifyIdent
         <div className="flex items-center gap-3 bg-indigo-900/30 border border-[#496b52]/40 rounded-xl px-4 py-3 animate-fade-in">
           <ShieldCheck className="w-5 h-5 text-indigo-400 shrink-0" />
           <div>
-            <p className="text-sm font-semibold text-indigo-300">Threat Contained</p>
-            <p className="text-xs text-indigo-400/70 mt-0.5">
+            <p className="text-sm font-semibold text-[#26201b]">Threat Contained</p>
+            <p className="text-xs text-slate-700 mt-0.5">
               All {actions.length} enforcement actions executed automatically
             </p>
           </div>

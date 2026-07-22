@@ -29,7 +29,7 @@ export default function SignalBar({ signal }: { signal: TopSignal }) {
             style={{ width: `${barPct}%` }}
           />
         </div>
-        <p className="text-xs text-slate-300 truncate">{signal.label}</p>
+        <p className="text-xs text-[#26201b] truncate">{signal.label}</p>
       </div>
     </div>
   )
