@@ -102,7 +102,7 @@ RISK_TIER_PERCENTILES = {
 
 # Risk tiers that trigger an encrypted audit vault entry.
 # Any /score result at or above these tiers will be stored in the hybrid vault.
-VAULT_AUDIT_RISK_TIERS = ["High", "Critical"]
+VAULT_AUDIT_RISK_TIERS = ["Low", "Medium", "High", "Critical"]
 
 
 def score_to_tier(score, tier_cutoffs):

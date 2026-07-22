@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import {
   User, Clock, Lock, Download, AlertTriangle,
@@ -57,7 +57,15 @@ export default function Report() {
     setUsedPayload(payload)
 
     const tasks: Promise<void>[] = [
-      scoreUser(payload).then(r => setScoreData(r)).catch(e => { throw e }),
+      scoreUser(payload).then(async (r) => {
+        setScoreData(r)
+        if (!recordId && r.audit_record_id) {
+          try {
+            const v = await fetchVaultEntry(r.audit_record_id)
+            setVaultData(v)
+          } catch(e) {}
+        }
+      }).catch(e => { throw e }),
     ]
     if (recordId) {
       tasks.push(fetchVaultEntry(recordId).then(v => setVaultData(v)).catch(() => {}))
@@ -112,7 +120,9 @@ export default function Report() {
   const tier = scoreData.risk_tier
   const tierGlow = tier === 'Critical' || tier === 'High' ? 'red' : 'green'
 
-  // Summary stats â€” pull from the payload we scored with
+  const displayRecordId = recordId || scoreData.audit_record_id
+
+  // Summary stats — pull from the payload we scored with
   const p = usedPayload
 
   return (
@@ -259,7 +269,7 @@ export default function Report() {
       </GlassCard>
 
       {/* Vault audit section */}
-      {recordId && (
+      {displayRecordId && (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <Lock className="w-4 h-4 text-indigo-400" />
@@ -267,7 +277,7 @@ export default function Report() {
               Audit Record
             </h2>
           </div>
-          <AuditBadge recordId={recordId} />
+          <AuditBadge recordId={displayRecordId} />
           {vaultData && (
             <GlassCard className="space-y-2 border-[#496b52]/15">
               <p className="text-xs text-[#26201b] font-medium uppercase tracking-wider">

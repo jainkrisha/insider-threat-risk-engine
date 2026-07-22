@@ -581,3 +581,46 @@ def verify_session(user_id: str, _key: str = Depends(require_api_key)):
         raise HTTPException(status_code=403, detail="Cannot verify identity for a suspended session.")
     
     return SESSION_STATES[user_id]
+
+
+class DemoLoginRequest(BaseModel):
+    user_id: str
+    outcome: str
+    reason: Optional[str] = None
+    off_hours: bool
+    failed_attempts: int
+    timestamp: str
+
+
+@app.post("/demo/login-event")
+def post_demo_login_event(req: DemoLoginRequest, _key: str = Depends(require_api_key)):
+    """
+    Updates the session state for a simulated attacker login attempt.
+    """
+    # Create or update the session state, preserving enforced_actions if any exist
+    existing_actions = []
+    if req.user_id in SESSION_STATES:
+        existing_actions = SESSION_STATES[req.user_id].get("enforced_actions", [])
+
+    # Write a vault record for the demo login event
+    audit_entry = {
+        "user_id": req.user_id,
+        "risk_tier": "Critical" if req.outcome == "suspended" else "Medium",
+        "hndl_tier": "Low",
+        "action_taken": existing_actions if existing_actions else (["suspend_account"] if req.outcome == "suspended" else ["log_standard"]),
+        "explanation": f"Live Attack Demo ({req.outcome}). Reason: {req.reason}",
+        "timestamp": req.timestamp,
+        "session_id": "live-demo"
+    }
+    record_id = vault.store_entry(audit_entry)
+
+    SESSION_STATES[req.user_id] = {
+        "session_status": req.outcome,
+        "enforced_actions": existing_actions,
+        "reason": req.reason,
+        "failed_attempts": req.failed_attempts,
+        "off_hours": req.off_hours,
+        "timestamp": req.timestamp,
+        "audit_record_id": record_id
+    }
+    return SESSION_STATES[req.user_id]

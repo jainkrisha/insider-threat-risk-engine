@@ -119,6 +119,19 @@ export async function checkHealth(): Promise<{ status: string; model_loaded: boo
 export interface SessionStateResponse {
   session_status: string
   enforced_actions: { action: string; enforced_at: string }[]
+  reason?: string | null
+  failed_attempts?: number
+  off_hours?: boolean
+  timestamp?: string
+}
+
+export interface DemoLoginRequest {
+  user_id: string
+  outcome: 'allowed' | 'step_up_required' | 'allowed_monitored' | 'suspended'
+  reason: 'too_many_failed_attempts' | 'failed_otp_verification' | null
+  off_hours: boolean
+  failed_attempts: number
+  timestamp: string
 }
 
 export async function fetchSessionState(userId: string): Promise<SessionStateResponse> {
@@ -134,6 +147,19 @@ export async function verifySessionIdentity(userId: string): Promise<SessionStat
   const res = await fetch(`/session/${encodeURIComponent(userId)}/verify`, {
     method: 'POST',
     headers: AUTH_HEADERS
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Unknown error' }))
+    throw new Error(err.detail ?? `HTTP ${res.status}`)
+  }
+  return res.json()
+}
+
+export async function postDemoLoginEvent(req: DemoLoginRequest): Promise<SessionStateResponse> {
+  const res = await fetch('/demo/login-event', {
+    method: 'POST',
+    headers: AUTH_HEADERS,
+    body: JSON.stringify(req)
   })
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: 'Unknown error' }))

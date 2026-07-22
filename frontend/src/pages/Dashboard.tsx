@@ -86,6 +86,7 @@ export default function Dashboard() {
   const [result, setResult]   = useState<ScoreResponse | null>(null)
   const [trend, setTrend]     = useState<TrendPoint[] | null>(null)
   const [sessionState, setSessionState] = useState<SessionStateResponse | null>(null)
+  const [preAnalysisState, setPreAnalysisState] = useState<SessionStateResponse | null>(null)
 
   function set<K extends keyof ScoreRequest>(key: K, val: ScoreRequest[K]) {
     setForm(f => ({ ...f, [key]: val }))
@@ -106,6 +107,19 @@ export default function Dashboard() {
     setResult(null)
     setTrend(null)
     try {
+      // Fetch session state BEFORE running analysis to see if demo triggered a suspension/step-up
+      try {
+        const preSession = await fetchSessionState(form.user)
+        if (preSession.session_status !== 'allowed' && preSession.reason) {
+          setPreAnalysisState(preSession)
+        } else {
+          setPreAnalysisState(null)
+        }
+      } catch (err) {
+        console.error("Failed to fetch pre-analysis session state", err)
+        setPreAnalysisState(null)
+      }
+
       const [res, trendRes] = await Promise.all([
         scoreUser(form),
         fetchUserTrend(form.user).catch(() => null),
@@ -157,6 +171,7 @@ export default function Dashboard() {
     setResult(null)
     setTrend(null)
     setError(null)
+    setPreAnalysisState(null)
   }
 
   const tier     = result?.risk_tier
@@ -166,7 +181,7 @@ export default function Dashboard() {
   const labelCls = 'block text-sm text-[#26201b] mb-1 font-medium'
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:6 py-10 space-y-8">
 
       {/* Header */}
       <div className="space-y-1">
@@ -286,8 +301,25 @@ export default function Dashboard() {
         </GlassCard>
 
         {/* ── RIGHT: Results ── */}
-        <div className="space-y-5">
-          {!result && !loading && (
+        <div className="space-y-6">
+          
+          {/* Demo Banner */}
+          {preAnalysisState && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4 animate-fade-in flex items-start gap-3">
+              <AlertTriangle className="w-6 h-6 text-red-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold text-red-900">
+                  ⚠ This user already has an active session status: {preAnalysisState.session_status.toUpperCase()}
+                </p>
+                <p className="text-sm text-red-800 mt-1">
+                  Reason: <span className="font-mono">{preAnalysisState.reason}</span> 
+                  {preAnalysisState.timestamp && ` (recorded at ${preAnalysisState.timestamp})`}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {!result && !loading && !error && (
             <GlassCard className="flex flex-col items-center justify-center min-h-[200px] text-[#26201b] text-sm text-center space-y-3">
               <ShieldCheck className="w-12 h-12 opacity-30" />
               <p>Fill in the form and click <strong className="text-[#26201b]">Run Analysis</strong><br />to get a live risk score from the AI model.</p>

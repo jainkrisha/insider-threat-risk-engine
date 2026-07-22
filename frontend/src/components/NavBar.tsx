@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
-import { ShieldCheck, Menu, X, Activity, Zap } from 'lucide-react'
+import { ShieldCheck, Menu, X, Activity, Zap, AlertTriangle } from 'lucide-react'
 import { checkHealth } from '../api'
 
 const NAV_LINKS = [
@@ -73,6 +73,13 @@ export default function NavBar() {
             <Zap className="w-3.5 h-3.5" />
             Dashboard
           </Link>
+          <Link
+            to="/demo"
+            className="text-base py-2.5 px-5 hidden md:flex items-center gap-1.5 bg-red-600/10 text-red-600 hover:bg-red-600/20 font-semibold rounded-lg transition-colors border border-red-600/20"
+          >
+            <AlertTriangle className="w-3.5 h-3.5" />
+            Live Attack Demo
+          </Link>
 
           {/* Mobile hamburger */}
           <button className="md:hidden p-2" onClick={() => setOpen(v => !v)}>
@@ -100,6 +107,9 @@ export default function NavBar() {
           ))}
           <Link to="/dashboard" className="btn-primary text-base py-3 mt-2 text-center flex items-center justify-center gap-2">
             <Zap className="w-3.5 h-3.5" /> Dashboard
+          </Link>
+          <Link to="/demo" className="text-base py-3 mt-1 text-center flex items-center justify-center gap-2 bg-red-600/10 text-red-600 font-semibold rounded-lg border border-red-600/20">
+            <AlertTriangle className="w-3.5 h-3.5" /> Live Attack Demo
           </Link>
         </div>
       )}

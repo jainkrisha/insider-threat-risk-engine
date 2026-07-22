@@ -5,6 +5,7 @@ import About     from './pages/About'
 import Features  from './pages/Features'
 import Dashboard from './pages/Dashboard'
 import Report    from './pages/Report'
+import LiveAttackDemo from './pages/LiveAttackDemo'
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
             <Route path="/features"          element={<Features />}  />
             <Route path="/dashboard"         element={<Dashboard />} />
             <Route path="/dashboard/report"  element={<Report />}    />
+            <Route path="/demo"              element={<LiveAttackDemo />} />
           </Routes>
         </main>
 
